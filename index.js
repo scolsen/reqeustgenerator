@@ -8,8 +8,6 @@ let commander = require('commander');
 
 function generateRequest(object){
     let result = {};
-    if(object.in !== 'body') return; //if this is not a body parameter, just return.
-    if(!object.hasOwnProperty('schema')) return; //A schema must be defined to generate the request.
     result = resolve(object.schema);
     return JSON.stringify(result);
 }
@@ -64,7 +62,6 @@ function setSampleString(name){
 
 function resolve(object, name){
     let result;
-    debugger;
     if(!object.hasOwnProperty('type')) return;
     switch(object.type){
         case 'string':
@@ -87,6 +84,9 @@ function resolve(object, name){
             result = []; //we need to process items as an object as the refs are replaced.
             result.push(resolve(object.items));
             return result;
+        case 'boolean':
+            return true;
+            break;
         case 'object':
             result = {};
             for(let key in object.properties){
@@ -122,7 +122,12 @@ function processEndpoints(api){
         console.log(PS1 + "Processing all endpoints");
         for(let key in api.paths){
             if(api.paths[key].hasOwnProperty(commander.verb)){
-                writeFile(generateRequest(api.paths[key].post.parameters), key);
+                api.paths[key].post.parameters.forEach((x)=>{
+                    if(x.in !== 'body') return; //if this is not a body parameter, just return.
+                    if(!x.hasOwnProperty('schema')) return; //A schema must be defined to generate the request.
+                    if(commander.minimal && !x.schema.hasOwnProperty('required')) return;                    
+                    writeFile(generateRequest(x), key);
+                });
             }
         }
     } else {
