@@ -75,6 +75,9 @@ function resolve(object, name){
     switch(object.type){
         case 'string':
             if(object.hasOwnProperty('enum')){
+                if(object.enum[0].includes("Length[")){
+                    return "Sample String";
+                }
                 return object.enum[0];
             } else {
                 let str = setSampleString(name);
