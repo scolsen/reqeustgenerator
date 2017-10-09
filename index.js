@@ -64,6 +64,9 @@ function setSampleString(name){
         case 'color':
             return "red";
             break;
+        case 'websiteUrl':
+            return "http://example.com";
+            break;
         default:
             return "Sample string";
     }
@@ -76,7 +79,8 @@ function resolve(object, name){
         case 'string':
             if(object.hasOwnProperty('enum')){
                 if(object.enum[0].includes("Length[")){
-                    return "Sample String";
+                    let str = setSampleString(name); 
+                    return str;
                 }
                 return object.enum[0];
             } else {
