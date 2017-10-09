@@ -15,7 +15,9 @@ function generateRequest(object){
 }
 
 function buildObject(obj, ref, key, fn){
-    obj[key] = fn(ref, key);
+    for(let k in ref){
+         if(ref[k].type !== 'object') obj[k] = fn(ref[k], key);
+    }
     return obj;
 }
 
@@ -95,11 +97,12 @@ function resolve(object, name){
             return true;
             break;
         case 'object':
+            let obj = {};
             for(let key in object.properties){
                 if(commander.minimal && object.hasOwnProperty('required')) {
-                    if(object.required.includes(key)) return buildObject({}, resolve(object.properties[key], key));
+                    if(object.required.includes(key)) return buildObject(obj, resolve(object.properties[key], key));
                 } else {
-                    return buildObject({}, object.properties[key], key, resolve);
+                    return buildObject(obj, object.properties, key, resolve);
                 }
             }
         default:
