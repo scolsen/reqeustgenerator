@@ -138,7 +138,8 @@ function processEndpoints(api){
         console.log(PS1 + "Processing all endpoints");
         for(let key in api.paths){
             if(api.paths[key].hasOwnProperty(commander.verb)){
-                api.paths[key].post.parameters.forEach((x)=>{
+               if(!api.paths[key][commander.verb].hasOwnProperty('parameters')) return;
+               api.paths[key][commander.verb].parameters.forEach((x)=>{
                     if(x.in !== 'body') return; //if this is not a body parameter, just return.
                     if(!x.hasOwnProperty('schema')) return; //A schema must be defined to generate the request.
                     if(commander.minimal && !x.schema.hasOwnProperty('required')) return;                    
@@ -186,7 +187,7 @@ commander
     .parse(process.argv);
 
 console.log(PS1 + "Fetching swagger file from URL: " + commander.url);
-console.log(PS1 + "Saving results to file: " + commander.file);
+console.log(PS1 + "Saving results to folder: " + commander.output);
 console.log(PS1 + "Generating examples for the following endpoints: ");
 commander.args.forEach((x)=>{
     console.log(x);
