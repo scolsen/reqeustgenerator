@@ -105,6 +105,7 @@ function resolve(object, name){
             break;
         case 'object':
             let obj = {};
+            if(!object.hasOwnProperty('properties')) return {};
             for(let key in object.properties){
                 if(commander.minimal && object.hasOwnProperty('required')) {
                     if(object.required.includes(key)) return buildObject(obj, resolve(object.properties[key], key));
@@ -141,7 +142,11 @@ function processEndpoints(api){
                     if(x.in !== 'body') return; //if this is not a body parameter, just return.
                     if(!x.hasOwnProperty('schema')) return; //A schema must be defined to generate the request.
                     if(commander.minimal && !x.schema.hasOwnProperty('required')) return;                    
-                    writeFile(generateRequest(x.schema.properties), key);
+                    if(x.schema.hasOwnProperty('properties')){
+                        writeFile(generateRequest(x.schema.properties), key);
+                    } else if (x.schema.hasOwnProperty('items')){
+                        writeFile(JSON.stringify(resolve(x.schema)), key);
+                    }
                 });
             }
         }
