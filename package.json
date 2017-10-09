@@ -1,0 +1,21 @@
+{
+  "name": "requestgenerator",
+  "version": "1.0.0",
+  "description": "Generate request examples from swagger",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "swagger",
+    "example",
+    "request"
+  ],
+  "author": "Scott Olsen",
+  "license": "ISC",
+  "devDependencies": {
+    "commander": "^2.11.0",
+    "request": "^2.83.0",
+    "swagger-parser": "^3.4.2"
+  }
+}
