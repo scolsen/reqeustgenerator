@@ -8,8 +8,15 @@ let commander = require('commander');
 
 function generateRequest(object){
     let result = {};
-    result = resolve(object.schema);
+    for(let k in object){
+        result[k] = resolve(object[k]);
+    }
     return JSON.stringify(result);
+}
+
+function buildObject(obj, ref, key, fn){
+    obj[key] = fn(ref, key);
+    return obj;
 }
 
 function assembleDate(){
@@ -88,15 +95,13 @@ function resolve(object, name){
             return true;
             break;
         case 'object':
-            result = {};
             for(let key in object.properties){
                 if(commander.minimal && object.hasOwnProperty('required')) {
-                    if(object.required.includes(key)) result[key] = resolve(object.properties[key], key);
+                    if(object.required.includes(key)) return buildObject({}, resolve(object.properties[key], key));
                 } else {
-                    result[key] = resolve(object.properties[key], key);
+                    return buildObject({}, object.properties[key], key, resolve);
                 }
             }
-            return result;
         default:
             return null;
     }
@@ -126,7 +131,7 @@ function processEndpoints(api){
                     if(x.in !== 'body') return; //if this is not a body parameter, just return.
                     if(!x.hasOwnProperty('schema')) return; //A schema must be defined to generate the request.
                     if(commander.minimal && !x.schema.hasOwnProperty('required')) return;                    
-                    writeFile(generateRequest(x), key);
+                    writeFile(generateRequest(x.schema.properties), key);
                 });
             }
         }
@@ -136,7 +141,7 @@ function processEndpoints(api){
                     for(let key in api.paths){
                         if(key.includes(y) && api.paths[key].hasOwnProperty(commander.verb)){
                             api.paths[key][commander.verb].parameters.forEach((x)=>{
-                                writeFile(generateRequest(x), key);
+                                writeFile(generateRequest(x.schema.properties), key);
                                 if(commander.verbose) console.log(generateRequest(x)); 
                             });
                         }
@@ -144,7 +149,7 @@ function processEndpoints(api){
                 } else {
                     if(!api.paths["/" + y].hasOwnProperty(commander.verb)) return; //if we don't have the target verb as property, do nothing.
                     api.paths["/" + y][commander.verb].parameters.forEach((x)=>{
-                        writeFile(generateRequest(x), y);
+                        writeFile(generateRequest(x.schema.properties), y);
                         if(commander.verbose) console.log(generateRequest(x)); 
                     });
                 }
