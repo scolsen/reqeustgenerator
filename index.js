@@ -1,9 +1,10 @@
-
+#!/usr/bin/env node
 const PS1 = "[requestGenerator] ";
 
 const fs = require('fs');
 const request = require('request');
 const sp = require('swagger-parser');
+const beautify = require('json-beautify');
 let commander = require('commander');
 
 function generateRequest(object){
@@ -11,7 +12,7 @@ function generateRequest(object){
     for(let k in object){
         result[k] = resolve(object[k]);
     }
-    return JSON.stringify(result);
+    return beautify(result, null, 2, 80);
 }
 
 function buildObject(obj, ref, key, fn){
