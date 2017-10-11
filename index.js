@@ -10,14 +10,14 @@ let commander = require('commander');
 function generateRequest(object){
     let result = {};
     for(let k in object){
-        result[k] = resolve(object[k]);
+        result[k] = resolve(object[k], k);
     }
     return beautify(result, null, 2, 80);
 }
 
 function buildObject(obj, ref, key, fn){
     for(let k in ref){
-         if(ref[k].type !== 'object') obj[k] = fn(ref[k], key);
+         if(ref[k].type !== 'object') obj[k] = fn(ref[k]);
     }
     return obj;
 }
@@ -28,7 +28,10 @@ function assembleDate(){
     return now.getFullYear() + '-' + now.getMonth() + '-' + now.getDate() + 'T' + time + 'Z';
 }
 
-function checkFormat(input){
+function checkFormat(input, name){
+    if(name !== undefined && name === 'week' || name === 'dayOfMonth' || name === 'dayOfWeek' || name === 'month'){
+        return 2;
+    }
     switch(input){
         case 'byte':
             return new Buffer("Sample String").toString('base64');
@@ -69,13 +72,15 @@ function setSampleString(name){
             return "http://example.com";
             break;
         default:
-            return "Sample string";
+            if(name !== undefined) return "sample" + name.charAt(0).toUpperCase() + name.slice(1);
+            return "sampleString";
     }
 }
 
 function resolve(object, name){
     let result;
     if(!object.hasOwnProperty('type')) return;
+    if(name !== undefined && name === "updateDate") return;
     switch(object.type){
         case 'string':
             if(object.hasOwnProperty('enum')){
@@ -86,16 +91,18 @@ function resolve(object, name){
                 return object.enum[0];
             } else {
                 let str = setSampleString(name);
-                if(object.hasOwnProperty('format')) return checkFormat(object.format);
+                if(object.hasOwnProperty('format')) return checkFormat(object.format, name);
                 return str;
             }
             break;
         case 'integer':
-            return 0;
+            if(name !== undefined && name.endsWith('Id')) return 101;
+            if(object.hasOwnProperty('format')) return checkFormat(object.format, name);
+            return 10;
             break;
         case 'number':
-            if(object.hasOwnProperty('format')) return checkFormat(object.format);
-            return 0;
+            if(object.hasOwnProperty('format')) return checkFormat(object.format, name);
+            return 10;
             break;
         case 'array':
             result = []; //we need to process items as an object as the refs are replaced.
@@ -109,7 +116,7 @@ function resolve(object, name){
             if(!object.hasOwnProperty('properties')) return {};
             for(let key in object.properties){
                 if(commander.minimal && object.hasOwnProperty('required')) {
-                    if(object.required.includes(key)) return buildObject(obj, resolve(object.properties[key], key));
+                    if(object.required.includes(key)) return buildObject(obj, object.properties, key, resolve);
                 } else {
                     return buildObject(obj, object.properties, key, resolve);
                 }
